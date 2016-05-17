@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Interaction ampoule LIFX</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    </head>
+    <body>
+        <h1>Démo GLMF</h1>
+        <br />
+        <button onclick="toggleActivation()">Activer / Désactiver</button><br />
+        <span id="message_activation">La lampe est désactivée</span><br />
+        <span id="message_lampe"></span>
+        
+        <script>
+        // Définitions pour l'ampoule LIFX
+        var LifxClient = require('node-lifx').Client;
+        var client = new LifxClient();
+        var etatActivation = false;
+        var etatLampe = 0;
+        
+        // Définitions pour le port série
+        var serialport = require("serialport");
+        var SerialPort = serialport.SerialPort;
+        var port = "/dev/ttyACM0";
+        var sp = new SerialPort(port, {
+            baudrate: 115200,
+            parser: serialport.parsers.readline("\n")
+        });
+
+        // Evénements pour l'ampoule LIFX
+        client.on('light-new', onLightNew);
+        // node-lifx est capable de découvrir les ampoules présentes sur le réseau:
+        //client.init();
+        // Mais ceci n'étant pas fiable à 100%, un peu d'aide ne fait pas de mal...
+        client.init({lights:  ['192.168.1.14']});
+        
+        // Callbacks pour l'ampoule LIFX
+        function onLightNew(light) {
+            light.getState(function(err, info) {
+                if (err) {
+                    console.log(err);
+                }
+                console.log('Label: ' + info.label);
+                console.log('Power:', (info.power === 1) ? 'on' : 'off');
+                console.log('Color:', info.color, '\n');
+                
+                // Evénements pour le port série
+                // Définis uniquement si l'ampoule qui nous intéresse existe
+                if (info.label == "AmpouleBureau") {
+                    etatActivation = true;
+                    document.getElementById("message_activation").innerHTML = "La lampe est activée";
+                    if (info.power === 1) {
+                        etatLampe = 1;
+                        document.getElementById("message_lampe").innerHTML = "La lampe est allumée";
+                    }
+                    else {
+                        etatLampe = 0;
+                        document.getElementById("message_lampe").innerHTML = "La lampe est éteinte";
+                    }
+
+                    sp.on('data', onData);
+                    sp.on('error', onError);
+                }
+            });
+        }
+        
+            
+        // Callbacks pour le port série
+        function onData(data) {
+            console.log("data dis, data dat " + data)
+            if (etatActivation) {
+                if ((data > 200) && (etatLampe === 1)) {
+                    console.log("Extinction lampe");
+                    client.light("AmpouleBureau").off();
+                    etatLampe = 0;
+                    document.getElementById("message_lampe").innerHTML = "La lampe est éteinte";
+                }
+                else if ((data < 150) && (etatLampe === 0)) {
+                    console.log("Allumage lampe");
+                    client.light("AmpouleBureau").on();
+                    etatLampe = 1;
+                    document.getElementById("message_lampe").innerHTML = "La lampe est allumée";
+                }
+            }
+        }
+         
+        function onError() {
+            console.log("something went horribly wrong");
+        }
+
+        // Callback d'interaction avec le bouton
+        function toggleActivation() {
+            if (etatActivation) {
+                etatActivation = false;
+                document.getElementById("message_activation").innerHTML = "La lampe est désactivée";
+                console.log("Extinction lampe");
+                client.light("AmpouleBureau").off();
+                etatLampe = 0;
+                document.getElementById("message_lampe").innerHTML = "La lampe est éteinte";
+            }
+            else {
+                etatActivation = true;
+                document.getElementById("message_activation").innerHTML = "La lampe est activée";
+                console.log("Allumage lampe");
+                client.light("AmpouleBureau").on();
+                etatLampe = 1;
+                document.getElementById("message_lampe").innerHTML = "La lampe est allumée";
+            }
+        
+        }
+        </script>        
+    </body>
+</html>

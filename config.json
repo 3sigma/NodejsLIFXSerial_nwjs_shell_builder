@@ -1,0 +1,13 @@
+{
+  "name": "Demo",
+  "description": "Demo GLMF",
+  "version": "0.0.1",
+  "nwjsVersion": "0.12.3",
+  "src": "/home/nicolas/NodejsLIFXSerial_nwjs_shell_builder",
+  "iconPath": "/home/nicolas/NodejsLIFXSerial_nwjs_shell_builder/icon_linux.png",
+  "windowsIconPath": "/home/nicolas/NodejsLIFXSerial_nwjs_shell_builder/icon_windows.ico",
+  "osxIconPath": "/home/nicolas/NodejsLIFXSerial_nwjs_shell_builder/ubuntu_logo.png",
+  "osxBgPath": "/home/nicolas/NodejsLIFXSerial_nwjs_shell_builder/ubuntu_logo.png",
+  "CFBundleIdentifier": "com.demo.app",
+  "license": "/home/nicolas/NodejsLIFXSerial_nwjs_shell_builder/license.txt"
+}
